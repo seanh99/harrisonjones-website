@@ -1,0 +1,9 @@
+# Raw/working assets not used by the live site (originals, wrong-brochure PDF, screenshots)
+assets/*
+!assets/images/
+!assets/images/**
+!assets/logo.svg
+
+# OS
+.DS_Store
+Thumbs.db

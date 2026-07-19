@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Client Login — Harrison Jones</title>
+<meta name="description" content="Private project access for Harrison Jones clients.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Nunito+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<a class="skip-link" href="#main">Skip to content</a>
+
+<header class="site-header is-lined" id="siteHeader">
+  <div class="header-inner">
+    <a href="index.html" class="logo-link" aria-label="Harrison Jones — home">
+      <img src="assets/logo.svg" alt="Harrison Jones">
+    </a>
+    <nav class="nav">
+      <a href="about.html">About</a>
+      <a href="services.html">Services</a>
+      <a href="contact.html">Contact</a>
+      <span class="nav-divider" aria-hidden="true"></span>
+      <a href="client.html" class="is-active">Client Login</a>
+    </nav>
+    <button class="menu-toggle" id="menuToggle" aria-label="Open menu" aria-expanded="false">
+      <span></span><span></span>
+    </button>
+  </div>
+</header>
+
+<div class="mobile-menu" id="mobileMenu">
+  <button class="mobile-close" id="mobileClose" aria-label="Close menu">&times;</button>
+  <a href="about.html">About</a>
+  <a href="services.html">Services</a>
+  <a href="contact.html">Contact</a>
+  <a href="client.html">Client Login</a>
+</div>
+
+<main class="page" id="main">
+  <section class="client-section">
+    <form class="client-form" id="clientForm" novalidate>
+      <span class="label">Private project access</span>
+
+      <div class="client-field">
+        <label for="clientUser">Email or Username</label>
+        <input type="text" id="clientUser" name="user" autocomplete="username" required>
+      </div>
+      <div class="client-field">
+        <label for="clientPass">Password</label>
+        <input type="password" id="clientPass" name="password" autocomplete="current-password" required>
+      </div>
+
+      <button type="submit" class="client-submit">Sign In</button>
+
+      <div class="client-links">
+        <a href="#" onclick="return false;">Forgot your access details?</a>
+      </div>
+
+      <div class="client-error" id="clientError">
+        We couldn't verify those details. Please check your email/username and password, or contact us at <a href="mailto:clifford@harrisonjones.dk">clifford@harrisonjones.dk</a> for assistance with your project access.
+      </div>
+    </form>
+  </section>
+</main>
+
+<footer class="site-footer">
+  <span>&copy; <span id="year"></span> Harrison Jones</span>
+</footer>
+
+<script src="main.js"></script>
+<script>document.getElementById('year').textContent = new Date().getFullYear();</script>
+</body>
+</html>

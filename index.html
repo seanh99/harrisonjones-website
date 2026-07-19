@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Harrison Jones</title>
+<meta name="description" content="Harrison Jones — Main Contractor and Project Manager for architecture studios, delivering projects across the UK and internationally.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Nunito+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<a class="skip-link" href="#main">Skip to content</a>
+
+<header class="site-header" id="siteHeader">
+  <div class="header-inner">
+    <a href="index.html" class="logo-link" aria-label="Harrison Jones — home">
+      <img src="assets/logo.svg" alt="Harrison Jones">
+    </a>
+    <nav class="nav">
+      <a href="about.html">About</a>
+      <a href="services.html">Services</a>
+      <a href="contact.html">Contact</a>
+      <span class="nav-divider" aria-hidden="true"></span>
+      <a href="client.html">Client Login</a>
+    </nav>
+    <button class="menu-toggle" id="menuToggle" aria-label="Open menu" aria-expanded="false">
+      <span></span><span></span>
+    </button>
+  </div>
+</header>
+
+<div class="mobile-menu" id="mobileMenu">
+  <button class="mobile-close" id="mobileClose" aria-label="Close menu">&times;</button>
+  <a href="about.html">About</a>
+  <a href="services.html">Services</a>
+  <a href="contact.html">Contact</a>
+  <a href="client.html">Client Login</a>
+</div>
+
+<main id="main">
+  <section class="hero-stage">
+    <div class="hero-slide is-active" data-format="vertical" data-caption="Private Residence">
+      <img src="assets/images/hero-01-entrance.jpg" alt="Entrance hall and staircase">
+    </div>
+    <div class="hero-slide" data-format="horizontal" data-caption="Private Residence">
+      <img src="assets/images/hero-02-dining.jpg" alt="Dining room with skylight">
+    </div>
+    <div class="hero-slide" data-format="vertical" data-caption="Private Residence">
+      <img src="assets/images/hero-03-living.jpg" alt="Living room with fireplace">
+    </div>
+    <div class="hero-slide" data-format="square" data-caption="Private Residence">
+      <img src="assets/images/hero-06-spiral.jpg" alt="Spiral staircase viewed from above">
+    </div>
+    <div class="hero-slide" data-format="vertical" data-caption="Private Residence">
+      <img src="assets/images/hero-04-sculpture.jpg" alt="Hallway with sculpture">
+    </div>
+    <div class="hero-slide" data-format="horizontal" data-caption="Private Residence">
+      <img src="assets/images/hero-07-stairs.jpg" alt="Staircase with timber handrail">
+    </div>
+    <div class="hero-slide" data-format="vertical" data-caption="Private Residence">
+      <img src="assets/images/hero-05-staircase.jpg" alt="Staircase banister detail">
+    </div>
+    <div class="hero-slide" data-format="horizontal" data-caption="Private Residence">
+      <img src="assets/images/hero-08-door.jpg" alt="Door hardware detail">
+    </div>
+
+    <button class="hero-nav-zone is-prev" aria-label="Previous image"></button>
+    <button class="hero-nav-zone is-next" aria-label="Next image"></button>
+
+    <div class="hero-caption">
+      <span id="heroCaptionTitle">Private Residence</span>
+      <span id="heroCaptionIndex">01 / 08</span>
+    </div>
+  </section>
+</main>
+
+<footer class="site-footer">
+  <span>&copy; <span id="year"></span> Harrison Jones</span>
+</footer>
+
+<script src="main.js"></script>
+<script>document.getElementById('year').textContent = new Date().getFullYear();</script>
+</body>
+</html>
