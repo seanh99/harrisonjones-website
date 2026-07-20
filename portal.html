@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Your Projects — Harrison Jones</title>
+<meta name="robots" content="noindex, nofollow">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Nunito+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<a class="skip-link" href="#main">Skip to content</a>
+
+<header class="site-header is-lined" id="siteHeader">
+  <div class="header-inner">
+    <a href="index.html" class="logo-link" aria-label="Harrison Jones — home">
+      <img src="assets/logo.svg" alt="Harrison Jones">
+    </a>
+    <nav class="nav">
+      <a href="#" id="logoutLink">Log Out</a>
+    </nav>
+  </div>
+</header>
+
+<main class="page" id="main">
+  <div class="admin-shell">
+    <div class="admin-head">
+      <h1 id="welcomeMsg">Your Projects</h1>
+    </div>
+
+    <div class="admin-msg" id="portalMsg"></div>
+
+    <div class="portal-list" id="projectList"></div>
+    <p class="portal-empty" id="emptyState" style="display:none;">No projects have been assigned to your account yet. If you believe this is a mistake, contact <a href="mailto:clifford@harrisonjones.dk" class="btn-text">clifford@harrisonjones.dk</a>.</p>
+  </div>
+</main>
+
+<footer class="site-footer">
+  <span>&copy; <span id="year"></span> Harrison Jones</span>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="supabase-client.js"></script>
+<script>document.getElementById('year').textContent = new Date().getFullYear();</script>
+<script>
+(function(){
+  const raw = localStorage.getItem('hj_client_session');
+  if (!raw) {
+    window.location.href = 'client.html';
+    return;
+  }
+
+  let session;
+  try { session = JSON.parse(raw); } catch { session = null; }
+  if (!session || !session.token) {
+    window.location.href = 'client.html';
+    return;
+  }
+
+  if (session.display_name) {
+    document.getElementById('welcomeMsg').textContent = `${session.display_name}'s Projects`;
+  }
+
+  const msg = document.getElementById('portalMsg');
+  const list = document.getElementById('projectList');
+  const emptyState = document.getElementById('emptyState');
+
+  function showError(text){
+    msg.textContent = text;
+    msg.classList.add('is-visible', 'is-error');
+  }
+
+  async function loadProjects(){
+    const { data, error } = await supabaseClient.rpc('client_my_projects', { p_token: session.token });
+
+    if (error) {
+      localStorage.removeItem('hj_client_session');
+      showError('Your session has expired. Redirecting to login…');
+      setTimeout(() => { window.location.href = 'client.html'; }, 1800);
+      return;
+    }
+
+    if (!data || !data.length) {
+      emptyState.style.display = 'block';
+      return;
+    }
+
+    data.forEach((project) => {
+      const row = document.createElement('a');
+      row.className = 'portal-item';
+      row.href = project.link;
+      row.target = '_blank';
+      row.rel = 'noopener';
+      row.innerHTML = `<h3>${project.name}</h3><span class="link-arrow">Open Files <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2 10L10 2M10 2H4M10 2V8" stroke="currentColor" stroke-width="1"/></svg></span>`;
+      list.appendChild(row);
+    });
+  }
+
+  document.getElementById('logoutLink').addEventListener('click', async (e) => {
+    e.preventDefault();
+    await supabaseClient.rpc('client_logout', { p_token: session.token });
+    localStorage.removeItem('hj_client_session');
+    window.location.href = 'client.html';
+  });
+
+  loadProjects();
+})();
+</script>
+</body>
+</html>

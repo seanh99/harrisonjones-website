@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin — Harrison Jones</title>
+<meta name="robots" content="noindex, nofollow">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Nunito+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<a class="skip-link" href="#main">Skip to content</a>
+
+<header class="site-header is-lined" id="siteHeader">
+  <div class="header-inner">
+    <a href="index.html" class="logo-link" aria-label="Harrison Jones — home">
+      <img src="assets/logo.svg" alt="Harrison Jones">
+    </a>
+    <nav class="nav">
+      <a href="index.html">View Site</a>
+      <span class="nav-divider" aria-hidden="true"></span>
+      <a href="#" id="logoutLink">Log Out</a>
+    </nav>
+  </div>
+</header>
+
+<main class="page" id="main">
+  <div class="admin-shell">
+    <div class="admin-head">
+      <h1>Admin</h1>
+    </div>
+
+    <div class="admin-msg" id="adminMsg"></div>
+
+    <!-- ============ Clients ============ -->
+    <section class="admin-section">
+      <h2>Clients</h2>
+
+      <form class="admin-form" id="clientForm">
+        <div class="field">
+          <label for="newClientUsername">Username or Email</label>
+          <input type="text" id="newClientUsername" required>
+        </div>
+        <div class="field">
+          <label for="newClientPassword">Password</label>
+          <input type="text" id="newClientPassword" required>
+        </div>
+        <div class="field">
+          <label for="newClientDisplayName">Display Name (optional)</label>
+          <input type="text" id="newClientDisplayName">
+        </div>
+        <div class="field">
+          <button type="submit" class="btn-quiet">Create Client</button>
+        </div>
+      </form>
+
+      <table class="admin-table">
+        <thead>
+          <tr>
+            <th>Username</th>
+            <th>Display Name</th>
+            <th>Projects</th>
+            <th>Created</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody id="clientsTableBody"></tbody>
+      </table>
+    </section>
+
+    <!-- ============ Projects ============ -->
+    <section class="admin-section">
+      <h2>Projects</h2>
+
+      <form class="admin-form" id="projectForm">
+        <div class="field">
+          <label for="newProjectName">Project Name</label>
+          <input type="text" id="newProjectName" required>
+        </div>
+        <div class="field full">
+          <label for="newProjectLink">Dropbox / Drive Link</label>
+          <input type="url" id="newProjectLink" placeholder="https://..." required>
+        </div>
+        <div class="field">
+          <button type="submit" class="btn-quiet">Create Project</button>
+        </div>
+      </form>
+
+      <table class="admin-table">
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Link</th>
+            <th>Assigned Clients</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody id="projectsTableBody"></tbody>
+      </table>
+    </section>
+
+    <!-- ============ Hero Images ============ -->
+    <section class="admin-section">
+      <h2>Homepage Hero — Selected Images</h2>
+      <p style="font-size:0.88rem; color:var(--muted); max-width:60ch; margin-bottom:1.75rem;">Choose which photos rotate on the homepage, their shape (controls how large they appear), and the order they play in.</p>
+
+      <div class="hero-gallery" id="heroGallery"></div>
+
+      <button type="button" class="btn-quiet" id="saveHeroBtn" style="margin-top:2rem;">Save Hero Selection</button>
+    </section>
+  </div>
+</main>
+
+<footer class="site-footer">
+  <span>&copy; <span id="year"></span> Harrison Jones</span>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="supabase-client.js"></script>
+<script>document.getElementById('year').textContent = new Date().getFullYear();</script>
+<script>
+(function(){
+  // Known image files available in assets/images/ (static assets, not dynamically uploaded).
+  const AVAILABLE_IMAGES = [
+    'hero-01-entrance.jpg', 'hero-02-dining.jpg', 'hero-03-living.jpg', 'hero-04-sculpture.jpg',
+    'hero-05-staircase.jpg', 'hero-06-spiral.jpg', 'hero-07-stairs.jpg', 'hero-08-door.jpg',
+  ];
+
+  let clients = [];
+  let projects = [];
+  let clientProjects = []; // [{client_id, project_id}]
+  let heroImages = [];
+
+  const msg = document.getElementById('adminMsg');
+  function showMsg(text, isError){
+    msg.textContent = text;
+    msg.classList.add('is-visible');
+    msg.classList.toggle('is-error', !!isError);
+    setTimeout(() => msg.classList.remove('is-visible'), 4000);
+  }
+
+  // ---------- Auth guard ----------
+  async function requireAdmin(){
+    const { data: { session } } = await supabaseClient.auth.getSession();
+    if (!session) { window.location.href = 'client.html'; return false; }
+    const { data: profile } = await supabaseClient.from('profiles').select('is_admin').eq('id', session.user.id).single();
+    if (!profile || !profile.is_admin) { window.location.href = 'client.html'; return false; }
+    return true;
+  }
+
+  document.getElementById('logoutLink').addEventListener('click', async (e) => {
+    e.preventDefault();
+    await supabaseClient.auth.signOut();
+    window.location.href = 'client.html';
+  });
+
+  // ---------- Data loading ----------
+  async function loadAll(){
+    const [{ data: c }, { data: p }, { data: cp }, { data: hi }] = await Promise.all([
+      supabaseClient.from('clients').select('*').order('created_at', { ascending: false }),
+      supabaseClient.from('projects').select('*').order('created_at', { ascending: false }),
+      supabaseClient.from('client_projects').select('*'),
+      supabaseClient.from('hero_images').select('*'),
+    ]);
+    clients = c || [];
+    projects = p || [];
+    clientProjects = cp || [];
+    heroImages = hi || [];
+    renderClients();
+    renderProjects();
+    renderHeroGallery();
+  }
+
+  function projectsForClient(clientId){
+    const ids = clientProjects.filter(cp => cp.client_id === clientId).map(cp => cp.project_id);
+    return projects.filter(p => ids.includes(p.id));
+  }
+
+  function clientsForProject(projectId){
+    const ids = clientProjects.filter(cp => cp.project_id === projectId).map(cp => cp.client_id);
+    return clients.filter(c => ids.includes(c.id));
+  }
+
+  // ---------- Clients ----------
+  function renderClients(){
+    const tbody = document.getElementById('clientsTableBody');
+    tbody.innerHTML = '';
+    clients.forEach((client) => {
+      const tr = document.createElement('tr');
+      const assigned = projectsForClient(client.id);
+      const chipList = assigned.map(p => `<span class="chip">${p.name}</span>`).join('') || '<span style="color:var(--muted);">None</span>';
+
+      tr.innerHTML = `
+        <td>${client.username}</td>
+        <td>${client.display_name || '—'}</td>
+        <td><div class="chip-list">${chipList}</div></td>
+        <td>${new Date(client.created_at).toLocaleDateString()}</td>
+        <td>
+          <button type="button" class="btn-text" data-action="assign">Assign Projects</button>
+          <button type="button" class="btn-text" data-action="reset">Reset Password</button>
+          <button type="button" class="btn-text" data-action="delete">Delete</button>
+        </td>
+      `;
+
+      tr.querySelector('[data-action="assign"]').addEventListener('click', () => toggleAssignRow(tr, client));
+      tr.querySelector('[data-action="reset"]').addEventListener('click', () => resetPassword(client));
+      tr.querySelector('[data-action="delete"]').addEventListener('click', () => deleteClient(client));
+
+      tbody.appendChild(tr);
+    });
+  }
+
+  function toggleAssignRow(afterRow, client){
+    const existing = afterRow.nextSibling;
+    if (existing && existing.dataset && existing.dataset.assignFor === client.id) {
+      existing.remove();
+      return;
+    }
+    document.querySelectorAll('[data-assign-for]').forEach(el => el.remove());
+
+    const assignedIds = new Set(projectsForClient(client.id).map(p => p.id));
+    const tr = document.createElement('tr');
+    tr.dataset.assignFor = client.id;
+    const td = document.createElement('td');
+    td.colSpan = 5;
+    const list = document.createElement('div');
+    list.className = 'checkbox-list';
+    projects.forEach((project) => {
+      const row = document.createElement('label');
+      row.className = 'checkbox-row';
+      row.innerHTML = `<input type="checkbox" ${assignedIds.has(project.id) ? 'checked' : ''}> ${project.name}`;
+      row.querySelector('input').addEventListener('change', async (e) => {
+        if (e.target.checked) {
+          await supabaseClient.from('client_projects').insert({ client_id: client.id, project_id: project.id });
+        } else {
+          await supabaseClient.from('client_projects').delete().eq('client_id', client.id).eq('project_id', project.id);
+        }
+        await loadAll();
+        showMsg('Project assignment updated.');
+      });
+      list.appendChild(row);
+    });
+    td.appendChild(list);
+    tr.appendChild(td);
+    afterRow.after(tr);
+  }
+
+  async function resetPassword(client){
+    const newPassword = prompt(`New password for ${client.username}:`);
+    if (!newPassword) return;
+    const { error } = await supabaseClient.rpc('admin_update_client_password', {
+      p_client_id: client.id, p_new_password: newPassword,
+    });
+    if (error) { showMsg(error.message, true); return; }
+    showMsg('Password updated.');
+  }
+
+  async function deleteClient(client){
+    if (!confirm(`Delete client "${client.username}"? This cannot be undone.`)) return;
+    const { error } = await supabaseClient.from('clients').delete().eq('id', client.id);
+    if (error) { showMsg(error.message, true); return; }
+    await loadAll();
+    showMsg('Client deleted.');
+  }
+
+  document.getElementById('clientForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const username = document.getElementById('newClientUsername').value.trim();
+    const password = document.getElementById('newClientPassword').value;
+    const displayName = document.getElementById('newClientDisplayName').value.trim() || null;
+
+    const { error } = await supabaseClient.rpc('admin_create_client', {
+      p_username: username, p_password: password, p_display_name: displayName,
+    });
+    if (error) { showMsg(error.message, true); return; }
+
+    e.target.reset();
+    await loadAll();
+    showMsg('Client created.');
+  });
+
+  // ---------- Projects ----------
+  function renderProjects(){
+    const tbody = document.getElementById('projectsTableBody');
+    tbody.innerHTML = '';
+    projects.forEach((project) => {
+      const tr = document.createElement('tr');
+      const assignedClients = clientsForProject(project.id);
+      tr.innerHTML = `
+        <td>${project.name}</td>
+        <td><a href="${project.link}" target="_blank" rel="noopener" class="btn-text" style="border-bottom:1px solid var(--line);">Open Link ↗</a></td>
+        <td>${assignedClients.length ? assignedClients.map(c => c.username).join(', ') : '<span style="color:var(--muted);">None</span>'}</td>
+        <td><button type="button" class="btn-text" data-action="delete">Delete</button></td>
+      `;
+      tr.querySelector('[data-action="delete"]').addEventListener('click', () => deleteProject(project));
+      tbody.appendChild(tr);
+    });
+  }
+
+  async function deleteProject(project){
+    if (!confirm(`Delete project "${project.name}"? This cannot be undone.`)) return;
+    const { error } = await supabaseClient.from('projects').delete().eq('id', project.id);
+    if (error) { showMsg(error.message, true); return; }
+    await loadAll();
+    showMsg('Project deleted.');
+  }
+
+  document.getElementById('projectForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const name = document.getElementById('newProjectName').value.trim();
+    const link = document.getElementById('newProjectLink').value.trim();
+
+    const { error } = await supabaseClient.from('projects').insert({ name, link });
+    if (error) { showMsg(error.message, true); return; }
+
+    e.target.reset();
+    await loadAll();
+    showMsg('Project created.');
+  });
+
+  // ---------- Hero images ----------
+  function renderHeroGallery(){
+    const gallery = document.getElementById('heroGallery');
+    gallery.innerHTML = '';
+
+    AVAILABLE_IMAGES.forEach((filename) => {
+      const existing = heroImages.find(h => h.filename === filename) || {
+        filename, format: 'vertical', caption: 'Private Residence', is_active: false, sort_order: 0,
+      };
+
+      const item = document.createElement('div');
+      item.className = 'hero-gallery-item';
+      item.dataset.filename = filename;
+      item.innerHTML = `
+        <img src="assets/images/${filename}" alt="${filename}">
+        <label class="field-row"><span>Active</span> <input type="checkbox" data-field="is_active" ${existing.is_active ? 'checked' : ''}></label>
+        <label class="field-row"><span>Order</span> <input type="number" data-field="sort_order" value="${existing.sort_order}" style="width:50px;"></label>
+        <select data-field="format">
+          <option value="vertical" ${existing.format === 'vertical' ? 'selected' : ''}>Vertical</option>
+          <option value="square" ${existing.format === 'square' ? 'selected' : ''}>Square</option>
+          <option value="horizontal" ${existing.format === 'horizontal' ? 'selected' : ''}>Horizontal</option>
+          <option value="panoramic" ${existing.format === 'panoramic' ? 'selected' : ''}>Panoramic</option>
+        </select>
+      `;
+      gallery.appendChild(item);
+    });
+  }
+
+  document.getElementById('saveHeroBtn').addEventListener('click', async () => {
+    const items = document.querySelectorAll('.hero-gallery-item');
+    const rows = Array.from(items).map((item) => ({
+      filename: item.dataset.filename,
+      is_active: item.querySelector('[data-field="is_active"]').checked,
+      sort_order: parseInt(item.querySelector('[data-field="sort_order"]').value, 10) || 0,
+      format: item.querySelector('[data-field="format"]').value,
+      caption: 'Private Residence',
+    }));
+
+    const { error } = await supabaseClient.from('hero_images').upsert(rows, { onConflict: 'filename' });
+    if (error) { showMsg(error.message, true); return; }
+    await loadAll();
+    showMsg('Hero selection saved.');
+  });
+
+  // ---------- Init ----------
+  requireAdmin().then((ok) => { if (ok) loadAll(); });
+})();
+</script>
+</body>
+</html>

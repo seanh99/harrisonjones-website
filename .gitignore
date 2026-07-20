@@ -4,6 +4,9 @@ assets/*
 !assets/images/**
 !assets/logo.svg
 
+# Large local-only archive, not part of the deployable site
+assets.zip
+
 # OS
 .DS_Store
 Thumbs.db

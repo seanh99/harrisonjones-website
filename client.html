@@ -53,7 +53,7 @@
         <input type="password" id="clientPass" name="password" autocomplete="current-password" required>
       </div>
 
-      <button type="submit" class="client-submit">Sign In</button>
+      <button type="submit" class="client-submit" id="clientSubmitBtn">Sign In</button>
 
       <div class="client-links">
         <a href="#" onclick="return false;">Forgot your access details?</a>
@@ -70,7 +70,68 @@
   <span>&copy; <span id="year"></span> Harrison Jones</span>
 </footer>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="supabase-client.js"></script>
 <script src="main.js"></script>
 <script>document.getElementById('year').textContent = new Date().getFullYear();</script>
+<script>
+(function(){
+  const form = document.getElementById('clientForm');
+  const error = document.getElementById('clientError');
+  const submitBtn = document.getElementById('clientSubmitBtn');
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    error.classList.remove('is-visible');
+    submitBtn.disabled = true;
+
+    const identifier = document.getElementById('clientUser').value.trim();
+    const password = document.getElementById('clientPass').value;
+
+    try {
+      // 1) Try admin (Supabase Auth) sign-in first — only the admin has a real Auth account.
+      const { data: authData, error: authError } = await supabaseClient.auth.signInWithPassword({
+        email: identifier,
+        password,
+      });
+
+      if (!authError && authData.session) {
+        const { data: profile } = await supabaseClient
+          .from('profiles')
+          .select('is_admin')
+          .eq('id', authData.user.id)
+          .single();
+
+        if (profile && profile.is_admin) {
+          window.location.href = 'admin.html';
+          return;
+        }
+        // Authenticated but not an admin — sign back out and fall through to reject.
+        await supabaseClient.auth.signOut();
+      }
+
+      // 2) Try client login (custom clients table via RPC).
+      const { data: clientData, error: clientError } = await supabaseClient.rpc('client_login', {
+        p_username: identifier,
+        p_password: password,
+      });
+
+      if (!clientError && clientData && clientData.length) {
+        const session = clientData[0];
+        localStorage.setItem('hj_client_session', JSON.stringify(session));
+        window.location.href = 'portal.html';
+        return;
+      }
+
+      throw new Error('invalid credentials');
+    } catch (err) {
+      error.classList.add('is-visible');
+      document.getElementById('clientPass').value = '';
+    } finally {
+      submitBtn.disabled = false;
+    }
+  });
+})();
+</script>
 </body>
 </html>

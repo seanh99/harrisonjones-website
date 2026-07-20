@@ -37,7 +37,13 @@ document.addEventListener('DOMContentLoaded', () => {
     revealEls.forEach(el => io.observe(el));
   }
 
-  /* ---------- Home hero: crossfade rotation + manual nav ---------- */
+});
+
+/* ---------- Home hero: crossfade rotation + manual nav ----------
+   Slides are injected dynamically (fetched from Supabase) on index.html,
+   so this runs on demand via window.initHeroRotation() once they exist,
+   rather than automatically on DOMContentLoaded. */
+window.initHeroRotation = function initHeroRotation(){
   const slides = document.querySelectorAll('.hero-slide');
   if (slides.length){
     let i = Array.from(slides).findIndex(s => s.classList.contains('is-active'));
@@ -94,15 +100,4 @@ document.addEventListener('DOMContentLoaded', () => {
     if (captionIndex) captionIndex.textContent = `${String(i + 1).padStart(2,'0')} / ${String(total).padStart(2,'0')}`;
     if (captionTitle) captionTitle.textContent = slides[i].dataset.caption || '';
   }
-
-  /* ---------- Client login: always rejects ---------- */
-  const clientForm = document.getElementById('clientForm');
-  if (clientForm){
-    const error = document.getElementById('clientError');
-    clientForm.addEventListener('submit', (e) => {
-      e.preventDefault();
-      if (error) error.classList.add('is-visible');
-    });
-  }
-
-});
+};

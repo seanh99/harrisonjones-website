@@ -256,6 +256,68 @@ a:focus-visible, button:focus-visible, input:focus-visible, [tabindex]:focus-vis
 .client-error.is-visible{ display:block; }
 .client-error a{ border-bottom:1px solid currentColor; }
 
+/* ---------------- Admin / Portal (utility UI, same tokens) ---------------- */
+.admin-shell{ flex:1; padding:6vw 5.5vw; }
+.admin-head{ display:flex; justify-content:space-between; align-items:baseline; flex-wrap:wrap; gap:1rem; margin-bottom:3rem; }
+.admin-head h1{ font-size:1.3rem; font-weight:700; margin:0; }
+.admin-section{ margin-bottom:4.5rem; }
+.admin-section h2{ font-size:0.95rem; font-weight:700; margin:0 0 1.5rem; }
+
+.btn-quiet{
+  border:1px solid var(--ink); padding:0.6rem 1.2rem; background:var(--paper);
+  font-size:0.68rem; letter-spacing:0.1em; text-transform:uppercase; font-weight:600;
+  transition:background-color .3s ease, color .3s ease;
+}
+.btn-quiet:hover{ background:var(--ink); color:var(--paper); }
+.btn-text{ font-size:0.78rem; color:var(--muted); border-bottom:1px solid transparent; }
+.btn-text:hover{ color:var(--ink); border-color:var(--line); }
+
+.admin-form{
+  display:grid; grid-template-columns:repeat(auto-fit,minmax(190px,1fr)); gap:1.25rem 1.5rem;
+  align-items:end; margin-bottom:2rem; padding:1.5rem; border:1px solid var(--line);
+}
+.admin-form .field{ display:flex; flex-direction:column; gap:0.4rem; }
+.admin-form .field.full{ grid-column:1/-1; }
+.admin-form label{ font-size:0.66rem; letter-spacing:0.08em; text-transform:uppercase; color:var(--muted); }
+.admin-form input, .admin-form select{
+  border:none; border-bottom:1px solid var(--line); background:transparent;
+  padding:0.5rem 0; font-size:0.9rem; color:var(--ink);
+}
+.admin-form input:focus, .admin-form select:focus{ outline:none; border-color:var(--ink); }
+
+.admin-table{ width:100%; border-collapse:collapse; font-size:0.86rem; }
+.admin-table th, .admin-table td{ text-align:left; padding:0.9rem 1rem 0.9rem 0; border-bottom:1px solid var(--line); vertical-align:top; }
+.admin-table th{ font-size:0.66rem; letter-spacing:0.08em; text-transform:uppercase; color:var(--muted); font-weight:600; }
+.admin-table td .btn-text{ margin-right:1rem; }
+
+.chip-list{ display:flex; flex-wrap:wrap; gap:0.4rem; }
+.chip{ font-size:0.7rem; padding:0.25rem 0.6rem; border:1px solid var(--line); white-space:nowrap; }
+
+.checkbox-list{ display:flex; flex-direction:column; gap:0.55rem; max-height:200px; overflow-y:auto; border:1px solid var(--line); padding:0.85rem; }
+.checkbox-row{ display:flex; align-items:center; gap:0.6rem; font-size:0.85rem; }
+
+.hero-gallery{ display:grid; grid-template-columns:repeat(auto-fill,minmax(150px,1fr)); gap:1.25rem; }
+.hero-gallery-item{ border:1px solid var(--line); padding:0.7rem; }
+.hero-gallery-item img{ width:100%; aspect-ratio:1; object-fit:cover; margin-bottom:0.7rem; filter:grayscale(1); }
+.hero-gallery-item .field-row{ display:flex; align-items:center; justify-content:space-between; gap:0.5rem; font-size:0.72rem; margin-bottom:0.4rem; }
+.hero-gallery-item select, .hero-gallery-item input[type="number"]{
+  width:100%; border:1px solid var(--line); background:transparent; padding:0.3rem; font-size:0.78rem; color:var(--ink);
+}
+
+.admin-msg{ font-size:0.82rem; padding:0.85rem 1rem; border:1px solid var(--line); margin-bottom:1.5rem; display:none; }
+.admin-msg.is-visible{ display:block; }
+.admin-msg.is-error{ border-color:#a33; color:#a33; }
+
+.portal-list{ display:flex; flex-direction:column; border-top:1px solid var(--line); max-width:640px; }
+.portal-item{
+  display:flex; justify-content:space-between; align-items:center; gap:1.5rem;
+  padding:1.5rem 0; border-bottom:1px solid var(--line);
+  transition:opacity .25s ease;
+}
+.portal-item:hover{ opacity:0.6; }
+.portal-item h3{ font-size:1.05rem; font-weight:600; margin:0; }
+.portal-empty{ font-size:0.92rem; color:var(--muted); padding-top:1.5rem; }
+
 /* ---------------- Footer ---------------- */
 .site-footer{
   padding:1.5rem 5.5vw; border-top:1px solid var(--line);
