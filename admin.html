@@ -106,6 +106,11 @@
       <h2>Homepage Hero — Selected Images</h2>
       <p style="font-size:0.88rem; color:var(--muted); max-width:60ch; margin-bottom:1.75rem;">Choose which photos rotate on the homepage, their shape (controls how large they appear), and the order they play in.</p>
 
+      <div style="display:flex; align-items:center; gap:1rem; margin-bottom:1.75rem;">
+        <input type="file" id="heroUploadInput" accept="image/*" style="font-size:0.82rem;">
+        <button type="button" class="btn-quiet" id="heroUploadBtn">Upload Photo</button>
+      </div>
+
       <div class="hero-gallery" id="heroGallery"></div>
 
       <button type="button" class="btn-quiet" id="saveHeroBtn" style="margin-top:2rem;">Save Hero Selection</button>
@@ -122,16 +127,17 @@
 <script>document.getElementById('year').textContent = new Date().getFullYear();</script>
 <script>
 (function(){
-  // Known image files available in assets/images/ (static assets, not dynamically uploaded).
-  const AVAILABLE_IMAGES = [
-    'hero-01-entrance.jpg', 'hero-02-dining.jpg', 'hero-03-living.jpg', 'hero-04-sculpture.jpg',
-    'hero-05-staircase.jpg', 'hero-06-spiral.jpg', 'hero-07-stairs.jpg', 'hero-08-door.jpg',
-  ];
+  const HERO_BUCKET = 'hero-images';
 
   let clients = [];
   let projects = [];
   let clientProjects = []; // [{client_id, project_id}]
   let heroImages = [];
+  let heroFiles = []; // filenames currently in Storage
+
+  function heroPublicUrl(filename){
+    return supabaseClient.storage.from(HERO_BUCKET).getPublicUrl(filename).data.publicUrl;
+  }
 
   const msg = document.getElementById('adminMsg');
   function showMsg(text, isError){
@@ -158,16 +164,18 @@
 
   // ---------- Data loading ----------
   async function loadAll(){
-    const [{ data: c }, { data: p }, { data: cp }, { data: hi }] = await Promise.all([
+    const [{ data: c }, { data: p }, { data: cp }, { data: hi }, { data: files }] = await Promise.all([
       supabaseClient.from('clients').select('*').order('created_at', { ascending: false }),
       supabaseClient.from('projects').select('*').order('created_at', { ascending: false }),
       supabaseClient.from('client_projects').select('*'),
       supabaseClient.from('hero_images').select('*'),
+      supabaseClient.storage.from(HERO_BUCKET).list('', { sortBy: { column: 'name', order: 'asc' } }),
     ]);
     clients = c || [];
     projects = p || [];
     clientProjects = cp || [];
     heroImages = hi || [];
+    heroFiles = (files || []).filter(f => f.name && f.id).map(f => f.name);
     renderClients();
     renderProjects();
     renderHeroGallery();
@@ -325,7 +333,12 @@
     const gallery = document.getElementById('heroGallery');
     gallery.innerHTML = '';
 
-    AVAILABLE_IMAGES.forEach((filename) => {
+    if (!heroFiles.length) {
+      gallery.innerHTML = '<p style="color:var(--muted); font-size:0.88rem;">No photos uploaded yet.</p>';
+      return;
+    }
+
+    heroFiles.forEach((filename) => {
       const existing = heroImages.find(h => h.filename === filename) || {
         filename, format: 'vertical', caption: 'Private Residence', is_active: false, sort_order: 0,
       };
@@ -334,7 +347,7 @@
       item.className = 'hero-gallery-item';
       item.dataset.filename = filename;
       item.innerHTML = `
-        <img src="assets/images/${filename}" alt="${filename}">
+        <img src="${heroPublicUrl(filename)}" alt="${filename}">
         <label class="field-row"><span>Active</span> <input type="checkbox" data-field="is_active" ${existing.is_active ? 'checked' : ''}></label>
         <label class="field-row"><span>Order</span> <input type="number" data-field="sort_order" value="${existing.sort_order}" style="width:50px;"></label>
         <select data-field="format">
@@ -343,10 +356,37 @@
           <option value="horizontal" ${existing.format === 'horizontal' ? 'selected' : ''}>Horizontal</option>
           <option value="panoramic" ${existing.format === 'panoramic' ? 'selected' : ''}>Panoramic</option>
         </select>
+        <button type="button" class="btn-text" data-action="delete-photo" style="margin-top:0.5rem;">Delete</button>
       `;
+      item.querySelector('[data-action="delete-photo"]').addEventListener('click', () => deleteHeroImage(filename));
       gallery.appendChild(item);
     });
   }
+
+  async function deleteHeroImage(filename){
+    if (!confirm(`Delete "${filename}"? This removes it from Storage and the homepage rotation.`)) return;
+
+    const { error: storageError } = await supabaseClient.storage.from(HERO_BUCKET).remove([filename]);
+    if (storageError) { showMsg(storageError.message, true); return; }
+
+    await supabaseClient.from('hero_images').delete().eq('filename', filename);
+    await loadAll();
+    showMsg('Photo deleted.');
+  }
+
+  document.getElementById('heroUploadBtn').addEventListener('click', async () => {
+    const input = document.getElementById('heroUploadInput');
+    const file = input.files[0];
+    if (!file) { showMsg('Choose a photo first.', true); return; }
+
+    const path = `${Date.now()}-${file.name.replace(/\s+/g, '-')}`;
+    const { error } = await supabaseClient.storage.from(HERO_BUCKET).upload(path, file);
+    if (error) { showMsg(error.message, true); return; }
+
+    input.value = '';
+    await loadAll();
+    showMsg('Photo uploaded. Tick "Active" and save to add it to the homepage rotation.');
+  });
 
   document.getElementById('saveHeroBtn').addEventListener('click', async () => {
     const items = document.querySelectorAll('.hero-gallery-item');
@@ -357,6 +397,8 @@
       format: item.querySelector('[data-field="format"]').value,
       caption: 'Private Residence',
     }));
+
+    if (!rows.length) { showMsg('No photos to save.', true); return; }
 
     const { error } = await supabaseClient.from('hero_images').upsert(rows, { onConflict: 'filename' });
     if (error) { showMsg(error.message, true); return; }

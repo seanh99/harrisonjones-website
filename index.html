@@ -61,7 +61,8 @@
 <script>document.getElementById('year').textContent = new Date().getFullYear();</script>
 <script>
 (function(){
-  // Fallback in case Supabase is unreachable or no images are marked active yet.
+  // Fallback (local files bundled with the site) in case Supabase Storage
+  // is unreachable or no images are marked active yet.
   const FALLBACK = [
     { filename:'hero-01-entrance.jpg', format:'vertical' },
     { filename:'hero-02-dining.jpg', format:'horizontal' },
@@ -71,19 +72,22 @@
     { filename:'hero-07-stairs.jpg', format:'horizontal' },
     { filename:'hero-05-staircase.jpg', format:'vertical' },
     { filename:'hero-08-door.jpg', format:'horizontal' },
-  ].map(i => ({ ...i, caption: 'Private Residence' }));
+  ].map(i => ({ ...i, caption: 'Private Residence', src: `assets/images/${i.filename}` }));
+
+  function heroPublicUrl(filename){
+    return supabaseClient.storage.from('hero-images').getPublicUrl(filename).data.publicUrl;
+  }
 
   function renderSlides(images){
     const stage = document.getElementById('heroStage');
     const navZones = stage.querySelectorAll('.hero-nav-zone');
-    const caption = stage.querySelector('.hero-caption');
 
     images.forEach((img, idx) => {
       const slide = document.createElement('div');
       slide.className = 'hero-slide' + (idx === 0 ? ' is-active' : '');
       slide.dataset.format = img.format;
       slide.dataset.caption = img.caption;
-      slide.innerHTML = `<img src="assets/images/${img.filename}" alt="${img.caption}">`;
+      slide.innerHTML = `<img src="${img.src}" alt="${img.caption}">`;
       stage.insertBefore(slide, navZones[0]);
     });
 
@@ -101,7 +105,7 @@
       if (error || !data || !data.length) {
         renderSlides(FALLBACK);
       } else {
-        renderSlides(data);
+        renderSlides(data.map(img => ({ ...img, src: heroPublicUrl(img.filename) })));
       }
     } catch {
       renderSlides(FALLBACK);
