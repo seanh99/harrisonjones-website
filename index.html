@@ -96,11 +96,19 @@
 
   async function loadHero(){
     try {
-      const { data, error } = await supabaseClient
+      // If Supabase is unreachable (e.g. DNS failure), the browser's own
+      // connection retries can take several seconds before the query
+      // promise ever settles. Race it against a short timeout so the
+      // local fallback photos always appear almost immediately instead
+      // of leaving the hero blank while that plays out.
+      const query = supabaseClient
         .from('hero_images')
         .select('filename, format, caption')
         .eq('is_active', true)
         .order('sort_order', { ascending: true });
+      const timeout = new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), 2500));
+
+      const { data, error } = await Promise.race([query, timeout]);
 
       if (error || !data || !data.length) {
         renderSlides(FALLBACK);
