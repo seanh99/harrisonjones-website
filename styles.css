@@ -201,26 +201,14 @@ a:focus-visible, button:focus-visible, input:focus-visible, [tabindex]:focus-vis
 }
 
 /* ---------------- Contact ---------------- */
-.contact-section{ flex:1; padding:6vw 5.5vw; display:flex; gap:5vw; align-items:flex-start; flex-wrap:wrap; }
-.contact-maps{ flex:1 1 460px; display:grid; grid-template-columns:1fr 1fr; gap:1px; background:var(--line); }
-.map-tile{ position:relative; aspect-ratio:4/5; background:var(--paper); overflow:hidden; display:block; }
-.map-tile svg{ width:100%; height:100%; }
-.map-tile-label{
-  position:absolute; left:1rem; bottom:1rem;
-  font-size:0.66rem; letter-spacing:0.1em; text-transform:uppercase; color:var(--muted);
-}
-.contact-info{ flex:0 1 340px; }
+.contact-section{ flex:1; padding:6vw 5.5vw; display:flex; align-items:center; justify-content:center; min-height:60vh; }
+.contact-info{ max-width:420px; text-align:center; }
 .contact-info .label{ display:block; margin-bottom:2rem; color:var(--muted); }
 .contact-block{ margin-bottom:2rem; }
-.contact-block p{ font-size:0.95rem; line-height:1.75; }
+.contact-block p{ font-size:1.05rem; line-height:1.85; }
 .contact-block a{ border-bottom:1px solid var(--line); transition:border-color .3s ease; }
 .contact-block a:hover{ border-color:var(--ink); }
 .contact-note{ font-size:0.85rem; color:var(--muted); margin-top:2.5rem; }
-
-@media (max-width:760px){
-  .contact-section{ flex-direction:column; }
-  .contact-maps{ width:100%; }
-}
 
 /* ---------------- Client login ---------------- */
 .client-section{
