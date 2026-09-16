@@ -284,14 +284,6 @@ a:focus-visible, button:focus-visible, input:focus-visible, [tabindex]:focus-vis
 .checkbox-list{ display:flex; flex-direction:column; gap:0.55rem; max-height:200px; overflow-y:auto; border:1px solid var(--line); padding:0.85rem; }
 .checkbox-row{ display:flex; align-items:center; gap:0.6rem; font-size:0.85rem; }
 
-.hero-gallery{ display:grid; grid-template-columns:repeat(auto-fill,minmax(150px,1fr)); gap:1.25rem; }
-.hero-gallery-item{ border:1px solid var(--line); padding:0.7rem; }
-.hero-gallery-item img{ width:100%; aspect-ratio:1; object-fit:cover; margin-bottom:0.7rem; filter:grayscale(1); }
-.hero-gallery-item .field-row{ display:flex; align-items:center; justify-content:space-between; gap:0.5rem; font-size:0.72rem; margin-bottom:0.4rem; }
-.hero-gallery-item select, .hero-gallery-item input[type="number"]{
-  width:100%; border:1px solid var(--line); background:transparent; padding:0.3rem; font-size:0.78rem; color:var(--ink);
-}
-
 .admin-msg{ font-size:0.82rem; padding:0.85rem 1rem; border:1px solid var(--line); margin-bottom:1.5rem; display:none; }
 .admin-msg.is-visible{ display:block; }
 .admin-msg.is-error{ border-color:#a33; color:#a33; }

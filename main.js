@@ -37,13 +37,12 @@ document.addEventListener('DOMContentLoaded', () => {
     revealEls.forEach(el => io.observe(el));
   }
 
+  initHeroRotation();
+
 });
 
-/* ---------- Home hero: crossfade rotation + manual nav ----------
-   Slides are injected dynamically (fetched from Supabase) on index.html,
-   so this runs on demand via window.initHeroRotation() once they exist,
-   rather than automatically on DOMContentLoaded. */
-window.initHeroRotation = function initHeroRotation(){
+/* ---------- Home hero: crossfade rotation + manual nav ---------- */
+function initHeroRotation(){
   const slides = document.querySelectorAll('.hero-slide');
   if (slides.length){
     let i = Array.from(slides).findIndex(s => s.classList.contains('is-active'));
